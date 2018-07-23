@@ -5,14 +5,8 @@ ponyrelayd: monitors directory for gammu sms files
             following the Pony Direct structure
 ------------------------------------------------"""
 
-import os
-import sys
-import time
-import argparse
-import json
-import logging
-import subprocess
-import shutil
+import os, sys, time, sys, json, subprocess
+import argparse, logging
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
