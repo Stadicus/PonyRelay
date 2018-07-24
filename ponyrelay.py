@@ -178,6 +178,7 @@ if __name__ == '__main__':
   logging.debug(" CONFIG: failed dir:  "+ args['faileddir'])
   logging.debug(" CONFIG: file pattern: "+ args['pattern'])
   logging.debug(" CONFIG: log level: "+ args['loglevel'] +" into "+ args['logfile'])
+  print("> watching for incoming files in", args['watchdir'])
 
   # start monitoring directory for incoming sms files
   observer = Observer()
