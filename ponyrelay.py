@@ -1,18 +1,17 @@
 #!/usr/bin/python3
-"""--------------------------------------------------
-ponyrelayd: monitors directory for gammu sms files
-            and broadcasts a Bitcoin transaction 
-            following the Pony Direct structure
-------------------------------------------------"""
+""" ponyrelay.py: Relay PonyDirect SMS transaction to the Bitcoin network """
 
-import os, sys, time, sys, json, subprocess
-import argparse, logging
+import os, sys, time, json, subprocess, shutil, logging
+import argparse
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
-# global config
-pattern = 'x'
+__author__    = "Stadicus"
+__copyright__ = "Copyright 2018"
+__license__   = "MIT"
+__version__   = "0.1-alpha"
+__email__     = "stadicus@protonmail.com"
 
 # global data
 sms_spool = []
@@ -39,17 +38,20 @@ class MyEventHandler(PatternMatchingEventHandler):
 
     logging.info("  FILE: processing " + event.src_path)
 
-    # SUB: Read File
-    with open(event.src_path, 'r') as file_source:
-      file_string = file_source.read()
+    # read file and get sender mobile# for unique key
+    # filename syntax: INYYYYMMDD_HHMMSS_00_+MOBILENO_00.txt
+    try:
+      with open(event.src_path, 'r') as file_source:
+        file_string = file_source.read()
+      sms_sender = event.src_path.split("_")[3]
+      sms = json.loads(file_string)
+    except:
+      logging.error(" FILE: unable to parse: " + event.src_path)
       try:
-        # get sender mobile#
-        sms_sender = event.src_path.split("_")[3]
-        sms = json.loads(file_string)
-      except:
-        logging.error(" FILE: unable to parse: " + event.src_path)
         shutil.move(event.src_path, args["faileddir"]+"InputErr_"+os.path.basename(event.src_path))
-        return
+      except:
+        pass
+      return
 
     sms_payload_id = sms['i']	if 'i' in sms else ''
     sms_sequence = sms['c']	if 'i' in sms else ''
@@ -133,43 +135,51 @@ def send_tx(sender, payload_id):
 
     # Move files to archive and remove from sms_spool
     for s in sms_spool_sorted:
-      filename = os.path.basename(s[4])
-      shutil.move(s[4], file_dest + filename)
-      logging.debug(" FILE: moved " + s[4] +" --> "+ file_dest + filename)
-      sms_spool.remove(s)
-      logging.debug(" SPOOL: file removed, remaining: " + str(len(sms_spool)))
+      try:
+        filename = os.path.basename(s[4])
+        shutil.move(s[4], file_dest + filename)
+        logging.debug(" FILE: moved " + s[4] +" --> "+ file_dest + filename)
+        sms_spool.remove(s)
+        logging.debug(" SPOOL: file removed, remaining: " + str(len(sms_spool)))
+      except:
+        logging.error(" FILE: could not move file: "+ s[4])
 
 def config():
   global pattern, datadir
-  parser = argparse.ArgumentParser(description='relay Pony Express Bitcoin SMS transactions', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser = argparse.ArgumentParser(description='Relay PonyDirect SMS transaction to the Bitcoin network', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument('--datadir', default=str(Path.home())+'/.ponyrelay/', help='base data directory')
   parser.add_argument('--watchdir', default=str(Path.home())+'/.ponyrelay/in/', help='directory monitored for incoming sms')
   parser.add_argument('--archivedir', default=str(Path.home())+'/.ponyrelay/archive/', help='targed directory for successful transactions')
   parser.add_argument('--faileddir', default=str(Path.home())+'/.ponyrelay/failed/', help='target directory for failed transactions')
   parser.add_argument('--pattern', default='*.*', help='file pattern to monitor in watchdir')
-  parser.add_argument('--loglevel', default='INFO', help='detail level of log file', choices=['INFO','DEBUG'])
+  parser.add_argument('--loglevel', default='INFO', help='detail level of log file', choices=['DEBUG','INFO','ERROR'])
   parser.add_argument('--logfile', default=str(Path.home())+'/.ponyrelay/ponyrelay.log', help='location of log file')
 
   args_obj = parser.parse_args()
   args = vars(args_obj)
+
+  # check if directories present, create if necessary
+  dirs = [args["datadir"],args["watchdir"],args["archivedir"],args["faileddir"]]
+  for d in dirs:
+    if not os.path.exists(d):
+      os.makedirs(d)
+
   return args
 
-
 if __name__ == '__main__':
-  print("Pony Relay version 0.1-alpha started.")
+  print("PonyRelay version "+ __version__ +" started.")
   args = config()
-
-  logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=args['logfile'], level=logging.INFO)
-  logging.info("  Pony Relay version 0.1-alpha started.")
-  logging.info("  -------------------------------------")
+  logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=args['logfile'], level=args["loglevel"])
+  logging.info("  PonyRelay version "+ __version__ +" started.")
   logging.debug(" CONFIG: data dir:    "+ args['datadir'])
   logging.debug(" CONFIG: watch dir:   "+ args['watchdir'])
   logging.debug(" CONFIG: archive dir: "+ args['archivedir'])
   logging.debug(" CONFIG: failed dir:  "+ args['faileddir'])
   logging.debug(" CONFIG: file pattern: "+ args['pattern'])
   logging.debug(" CONFIG: log level: "+ args['loglevel'] +" into "+ args['logfile'])
+  print("> watching for incoming files in", args['watchdir'])
 
-  # start monitoring directory for incoming sms
+  # start monitoring directory for incoming sms files
   observer = Observer()
   observer.schedule(MyEventHandler(), args['watchdir'])
   observer.start()
