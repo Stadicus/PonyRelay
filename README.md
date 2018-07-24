@@ -22,7 +22,7 @@ Todo-List:
 - Mobile broadband modem (eg. usb-stick), configured with `gammu-smsd` to receive text messages
 
 ### Installation
-From GitHub
+From Github, tested on Ubuntu 16.04 and Raspbian Stretch
 ```
 $ sudo apt update
 $ sudo apt install git python3 python3-pip
@@ -34,3 +34,4 @@ $ ./ponyrelay.py
 ```
 
 Use `./ponyrelay.py --help` for information about command line arguments.
+
