@@ -24,7 +24,7 @@ Todo-List:
 ### Installation
 From GitHub
 ```
-$ sudo apt install git 
+$ sudo apt install git python3 python3-pip
 $ git clone https://github.com/Stadicus/ponyrelay
 $ cd ponyrelay
 $ pip install logging
