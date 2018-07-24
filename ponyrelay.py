@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """ ponyrelay.py: Relay PonyDirect SMS transaction to the Bitcoin network """
 
-import os, sys, time, sys, json, subprocess, shutil
-import argparse, logging
+import os, sys, time, json, subprocess, shutil, logging
+import argparse
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -38,12 +38,11 @@ class MyEventHandler(PatternMatchingEventHandler):
 
     logging.info("  FILE: processing " + event.src_path)
 
-    # SUB: Read File
+    # read file and get sender mobile# for unique key
+    # filename syntax: INYYYYMMDD_HHMMSS_00_+MOBILENO_00.txt
     try:
       with open(event.src_path, 'r') as file_source:
         file_string = file_source.read()
-  #    try:
-        # get sender mobile#
       sms_sender = event.src_path.split("_")[3]
       sms = json.loads(file_string)
     except:
