@@ -1,4 +1,6 @@
 # PonyRelay
+#### Relay PonyDirect SMS transaction to the Bitcoin network
+
 Aimed at improving Bitcoins resiliency, PonyRelay is a simple Python application that acts as a bridge between SMS texts and the Bitcoin peer-to-peer network. 
 It watches a folder for incoming Bitcoin transactions, delivered by text messages originating from the [PonyDirect](https://github.com/MuleTools/PonyDirect) mobile app.
 A Bitcoin transaction is transmitted using multiple text messaages, so this PonyRelay reconstructs and validates the transaction and broadcasts it through a running Bitcoin node.
@@ -18,3 +20,16 @@ Todo-List:
 ### Requiremens
 - `bitcoin-cli` connected to a Bitcon node needs to be present
 - Mobile broadband modem (eg. usb-stick), configured with `gammu-smsd` to receive text messages
+
+### Installation
+From GitHub
+```
+$ sudo apt install git 
+$ git clone https://github.com/Stadicus/ponyrelay
+$ cd ponyrelay
+$ pip install logging
+$ pip install -r requirements.txt
+$ ./ponyrelay.py
+```
+
+Use `./ponyrelay.py --help` for information about command line arguments.
